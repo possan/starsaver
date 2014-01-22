@@ -86,7 +86,7 @@
 
 		dataTexture = gl.createTexture();
 
-		var numstars = 5000;
+		var numstars = 7000;
 
 		var t = [];
 		var t2 = [];
@@ -97,7 +97,7 @@
 
 			// bx = 100 * Math.sin(i / 350.0);
 			// by = 100 * Math.cos(i / 140.0);
-			bz = 200 * (i / numstars) - 100;
+			// bz = 200 * (i / numstars) - 100;
 
 			var r = 0.0;//1 + Math.random() * 0.02;
 
@@ -155,17 +155,27 @@
         var worldmatrix = mat4.create();
         var projmatrix = mat4.create();
         var tmpmatrix = mat4.create();
+        var tmpmatrix2 = mat4.create();
+        var tmpmatrix3 = mat4.create();
+        var tmpmatrix4 = mat4.create();
 
 	    function renderFrame() {
 	        gl.uniform1f(timeLocation, time);
 
 	        mat4.identity(worldmatrix);
-	        mat4.rotate(worldmatrix, tmpmatrix,   time / 1.4, [1, 0, 0]);
-	        mat4.rotate(tmpmatrix,   worldmatrix, time / 1.7, [0, 1, 0]);
-	        mat4.rotate(worldmatrix, tmpmatrix,   time / 1.4, [0, 0, 1]);
+	        mat4.identity(tmpmatrix);
+	        mat4.identity(tmpmatrix2);
+	        mat4.identity(tmpmatrix3);
+	        mat4.identity(tmpmatrix4);
+	        mat4.rotate(tmpmatrix2, tmpmatrix, time / 3.4, [1, 0, 0]);
+	        mat4.rotate(tmpmatrix3, tmpmatrix, time / 4.7, [0, 1, 0]);
+        	mat4.rotate(tmpmatrix4, tmpmatrix, time / 3.4, [0, 0, 1]);
+        	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix2);
+        	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix3);
+        	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix4);
 
 	        mat4.identity(projmatrix);
-			mat4.perspective(tmpmatrix, 100, window.innerWidth/window.innerHeight, 5, 50000);
+			mat4.perspective(tmpmatrix, 150, window.innerWidth/window.innerHeight, 3, 5000);
 			mat4.translate(projmatrix, tmpmatrix, [0, 0, 0])
 			// console.log(projmatrix);
 
@@ -176,6 +186,11 @@
 			// gl.bindTexture(gl.TEXTURE_2D, dataTexture);
 			// gl.uniform1i(gl.getUniformLocation(program, "specSampler"), 0);
 
+			gl.depthMask(false);
+			gl.disable(gl.DEPTH_TEST);
+			gl.disable(gl.ALPHA_TEST);
+			gl.enable(gl.BLEND);
+			gl.blendFunc(gl.ONE, gl.ONE);
 	        gl.drawArrays(gl.TRIANGLES, 0, numstars * 6);
 	        time += 1.0 / 60.0;
 	        requestAnimFrame(renderFrame);

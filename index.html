@@ -27,47 +27,28 @@
 <script id="2d-vertex-shader" type="x-shader/x-vertex">
 
 precision mediump float;
-
 attribute vec4 position;
 attribute vec2 uv;
-
 uniform mat4 worldmatrix;
 uniform mat4 projmatrix;
 uniform float time;
 uniform vec2 resolution;
-
-varying vec2 texcoord;
+varying vec3 texcoord;
 
 void main() {
-
 	vec3 tmp3 = vec3(
 		position.x,
 		position.y,
-		position.z
-	//	mod(position.z + (time * 5.0) + 200.0, 200.0) - 100.0
+		mod(position.z + (time * 30.0) + 200.0, 200.0) - 100.0
 	);
-
 	tmp3 *= mat3(worldmatrix);
-
-	//vec3 tmp = vec4(
-	//	position.x,
-	//	position.y,
-	//	mod(position.z + time * 3.0, 20.0) - 10.0,
-	//	1.0);
-
 	vec4 tmp = vec4(tmp3, 1);
 	tmp.z -= 50.0;
 	tmp *= projmatrix;
-
-	// tmp *= worldmatrix;
-
-	// tmp *= projmatrix;
-
-	tmp.x += (2.0 * (uv.x - 0.5)) * 10.0;
-	tmp.y += (2.0 * (uv.y - 0.5)) * 10.0 * resolution.x / resolution.y;
-
+	tmp.x += (2.0 * (uv.x - 0.5)) * 2.0;
+	tmp.y += (2.0 * (uv.y - 0.5)) * 2.0 * resolution.x / resolution.y;
 	gl_Position = tmp;
-	texcoord = vec2(uv.x, uv.y);
+	texcoord = vec3(uv.x, uv.y, tmp.z);
 }
 
 </script>
@@ -76,22 +57,28 @@ void main() {
 #ifdef GL_ES
 precision mediump float;
 #endif
-
 uniform vec2 resolution;
 uniform float time;
-uniform float beattime;
-uniform vec2 mouse;
-uniform float hue1;
-uniform vec3 color1;
-uniform float hue2;
-uniform vec3 color2;
 uniform sampler2D specSampler;
-
-varying vec2 texcoord;
-
+varying vec3 texcoord;
 
 void main() {
-	gl_FragColor = vec4( texcoord.x, texcoord.y, 1, 1.0 );
+	float nx = 2.0 * (texcoord.x - 0.5);
+	float ny = 2.0 * (texcoord.y - 0.5);
+	float d = sqrt( nx * nx + ny * ny );
+	d = max(0.0, d);
+	float b = 1.0 / (d * 10.0);
+	b -= 0.2;
+	b = max(0.0, b);
+	float mult = max(0.0, 1.0 - (texcoord.z / 60.0));
+	b *= mult;
+	b = max(0.0, b);
+	gl_FragColor += vec4(
+		b * (0.5 + 0.4 * gl_FragCoord.y / resolution.y),
+		b * (0.8 + 0.6 * gl_FragCoord.y / resolution.y),
+		b,
+		1.0
+	);
 }
 
 </script>
