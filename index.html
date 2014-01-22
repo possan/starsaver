@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Starfield</title>
+		<style>
+
+			html, body {
+				margin: 0;
+				padding: 0;
+				border: 0;
+				background-color: #000;
+				color: #fff;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+			}
+
+			canvas#canvas {
+				position: absolute;
+				left: 0px;
+				top: 0px;
+				width: 100%;
+				height: 100%;
+			}
+
+		</style>
+<script id="2d-vertex-shader" type="x-shader/x-vertex">
+
+precision mediump float;
+
+attribute vec4 position;
+attribute vec2 uv;
+
+uniform mat4 worldmatrix;
+uniform mat4 projmatrix;
+uniform float time;
+uniform vec2 resolution;
+
+varying vec2 texcoord;
+
+void main() {
+
+	vec3 tmp3 = vec3(
+		position.x,
+		position.y,
+		position.z
+	//	mod(position.z + (time * 5.0) + 200.0, 200.0) - 100.0
+	);
+
+	tmp3 *= mat3(worldmatrix);
+
+	//vec3 tmp = vec4(
+	//	position.x,
+	//	position.y,
+	//	mod(position.z + time * 3.0, 20.0) - 10.0,
+	//	1.0);
+
+	vec4 tmp = vec4(tmp3, 1);
+	tmp.z -= 50.0;
+	tmp *= projmatrix;
+
+	// tmp *= worldmatrix;
+
+	// tmp *= projmatrix;
+
+	tmp.x += (2.0 * (uv.x - 0.5)) * 10.0;
+	tmp.y += (2.0 * (uv.y - 0.5)) * 10.0 * resolution.x / resolution.y;
+
+	gl_Position = tmp;
+	texcoord = vec2(uv.x, uv.y);
+}
+
+</script>
+<script id="2d-fragment-shader" type="x-shader/x-fragment">
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform vec2 resolution;
+uniform float time;
+uniform float beattime;
+uniform vec2 mouse;
+uniform float hue1;
+uniform vec3 color1;
+uniform float hue2;
+uniform vec3 color2;
+uniform sampler2D specSampler;
+
+varying vec2 texcoord;
+
+
+void main() {
+	gl_FragColor = vec4( texcoord.x, texcoord.y, 1, 1.0 );
+}
+
+</script>
+	</head>
+	<body>
+		<canvas id="canvas" width="100%" height="100%"></canvas>
+		<script src="webgl-utils.js" type="text/javascript"></script>
+		<script src="gl-matrix.js" type="text/javascript"></script>
+		<script src="stars.js" type="text/javascript"></script>
+	</body>
+</html>
