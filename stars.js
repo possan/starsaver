@@ -6,6 +6,9 @@
 			originX: 0,
 			originY: 0,
 			originZ: 0,
+			viewX: 0,
+			viewY: 0,
+			viewZ: 0,
 			forwardX: 0,
 			forwardY: 0,
 			forwardZ: 1,
@@ -21,6 +24,7 @@
 		};
 		this.startTime = 0;
 		this.frame = 0;
+		this.loading = true;
 		this.environment = {};
 	}
 
@@ -39,14 +43,56 @@
 		if (tmp) {
 			tmp = JSON.parse(tmp);
 			if (tmp) {
-				this.overrideConfig(tmp);
+				for(k in tmp) {
+					this.settings[k] = tmp[k];
+				}
 			}
 		}
 	}
 
-	Stars.prototype.overrideConfig = function(obj) {
-		for(k in obj) {
-			this.settings[k] = obj[k];
+	Stars.prototype.parseArray = function(str, len) {
+		var ret = new Array(len);
+		var spl = str.split(',');
+		for(var i=0; i<len; i++) {
+			ret[i] = 0.0;
+			try {
+				var f = parseFloat(spl[i]);
+				ret[i] = f;
+			} catch(e) {
+			}
+		}
+		console.log('parseArray', str, ret);
+		return ret;
+	}
+
+	Stars.prototype.buildString = function(dummy) {
+		var ret = new Array(arguments.length);
+		ret = [];
+		for(var i=0; i<arguments.length; i++)
+			ret.push(arguments[i].toString());
+		ret = ret.join(', ');
+		console.log('buildString', arguments, ret);
+		return ret;
+	}
+
+	Stars.prototype.appOverride = function(obj) {
+		if (obj.forwardvector) {
+			var a = this.parseArray(obj.forwardvector, 3);
+			this.settings.forwardX = a[0];
+			this.settings.forwardY = a[1];
+			this.settings.forwardZ = a[2];
+		}
+		if (obj.upvector) {
+			var a = this.parseArray(obj.upvector, 3);
+			this.settings.upX = a[0];
+			this.settings.upY = a[1];
+			this.settings.upZ = a[2];
+		}
+		if (obj.viewoffset) {
+			var a = this.parseArray(obj.viewoffset, 3);
+			this.settings.viewX = a[0];
+			this.settings.viewY = a[1];
+			this.settings.viewZ = a[2];
 		}
 	}
 
@@ -56,9 +102,62 @@
 		// defaults are initialized, load settings
 		this.loadConfig();
 
+		this.initConfigForm();
+
 		// load websaver overrides
 		if (window.saver) {
 		}
+	}
+
+	Stars.prototype.initConfigForm = function() {
+		var self = this;
+
+		var f1 = document.getElementById('forwardvectorfield');
+		f1.value = self.buildString(self.settings.forwardX, self.settings.forwardY, self.settings.forwardZ);
+		f1.addEventListener('change', function() {
+			// save field value
+			var a = self.parseArray(f1.value, 3);
+			self.settings.forwardX = a[0];
+			self.settings.forwardY = a[1];
+			self.settings.forwardZ = a[2];
+			self.saveConfig();
+		});
+
+		var f2 = document.getElementById('upvectorfield');
+		f2.value = self.buildString(self.settings.upX, self.settings.upY, self.settings.upZ);
+		f2.addEventListener('change', function() {
+			// save field value
+			var a = self.parseArray(f2.value, 3);
+			self.settings.upX = a[0];
+			self.settings.upY = a[1];
+			self.settings.upZ = a[2];
+			self.saveConfig();
+		});
+
+		var f3 = document.getElementById('viewoffsetfield');
+		f3.value = self.buildString(self.settings.viewX, self.settings.viewY, self.settings.viewZ);
+		f3.addEventListener('change', function() {
+			// save field value
+			var a = self.parseArray(f3.value, 3);
+			self.settings.viewX = a[0];
+			self.settings.viewY = a[1];
+			self.settings.viewZ = a[2];
+			self.saveConfig();
+		});
+
+		var f4 = document.getElementById('closecontrols');
+		f4.addEventListener('click', function() {
+			document.getElementById('controls').style.display = 'none';
+		});
+
+
+		document.body.addEventListener('keydown', function(e) {
+			console.log(e);
+			if (e.keyCode == 67) {
+				// "C"
+				document.getElementById('controls').style.display = 'block';
+			}
+		});
 	}
 
 	Stars.prototype.initGL = function() {
@@ -79,7 +178,8 @@
 		var uvLocation = gl.getAttribLocation(program, "uv");
 
 		var resolutionLocation = gl.getUniformLocation(program, "resolution");
-		var timeLocation = gl.getUniformLocation(program, "time");
+		var localTimeLocation = gl.getUniformLocation(program, "localTime");
+		var globalTimeLocation = gl.getUniformLocation(program, "globalTime");
 
 		var worldmatrixLocation = gl.getUniformLocation(program, "worldmatrix");
 		var projectionmatrixLocation = gl.getUniformLocation(program, "projmatrix");
@@ -159,8 +259,12 @@
         var tmpmatrix3 = mat4.create();
         var tmpmatrix4 = mat4.create();
 
+        var globalTimeOffset = ((new Date()).getTime() / 1000.0) % 100000.0;
+        console.log('global time offset', globalTimeOffset);
+
 	    function renderFrame() {
-	        gl.uniform1f(timeLocation, time);
+	        gl.uniform1f(globalTimeLocation, time + globalTimeOffset);
+	        gl.uniform1f(localTimeLocation, time);
 
 	        mat4.identity(worldmatrix);
 	        mat4.identity(tmpmatrix);
@@ -207,6 +311,11 @@
 
 		this.frame += 1.0 / 60.0;
 		requestAnimationFrame(this.renderFrame.bind(this));
+
+		if (this.loading) {
+			this.loading = false;
+			document.getElementById('loading').style.display = 'none';
+		}
 	}
 
 	var g_stars = new Stars();
