@@ -200,6 +200,8 @@
 		var t1 = new Array(numstars * 4 * 6);
 		var t2 = new Array(numstars * 2 * 6);
 
+		Math.seedrandom('Starfield unicorns');
+
 		var t1o = 0;
 		var t2o = 0;
 
