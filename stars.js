@@ -336,7 +336,7 @@
 	        mat4.identity(projmatrix);
 	        mat4.identity(tmpmatrix);
 	        mat4.identity(tmpmatrix2);
-			mat4.translate(tmpmatrix2, tmpmatrix, [-self.settings.viewX, -self.settings.viewY, self.settings.viewZ])
+			mat4.translate(tmpmatrix2, tmpmatrix, [self.settings.viewX/2.0, self.settings.viewY/2.0, self.settings.viewZ/2.0])
 			mat4.perspective(tmpmatrix3, 70, window.innerWidth/window.innerHeight, 1, 1000);
         	mat4.multiply(projmatrix, projmatrix, tmpmatrix2);
         	mat4.multiply(projmatrix, projmatrix, tmpmatrix3);
