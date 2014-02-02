@@ -33,6 +33,14 @@
 				height: 50%;
 			}
 
+			div#debug {
+				position: absolute;
+				right: 20px;
+				top: 20px;
+				color: #f84;
+				display: none;
+			}
+
 			div#loading span {
 				position: absolute;
 				right: -100px;
@@ -79,11 +87,12 @@
 					mod(position.z + (globalTime * 30.0) + 200.0, 200.0) - 100.0
 				);
 				tmp3 *= mat3(worldmatrix);
-				vec4 tmp = vec4(tmp3, 1);
-				tmp.z -= 50.0;
+				vec4 tmp = vec4(tmp3, 0);
+				//	tmp.z -= 50.0;
 				tmp *= projmatrix;
-				tmp.x += (2.0 * (uv.x - 0.5)) * 2.0;
-				tmp.y += (2.0 * (uv.y - 0.5)) * 2.0 * resolution.x / resolution.y;
+				float radius = 1.0;
+				tmp.x += (2.0 * (uv.x - 0.5)) * radius;
+				tmp.y += (2.0 * (uv.y - 0.5)) * radius * resolution.x / resolution.y;
 				gl_Position = tmp;
 				texcoord = vec3(uv.x, uv.y, tmp.z);
 			}
@@ -125,6 +134,7 @@
 	<body>
 		<canvas id="canvas" width="100%" height="100%"></canvas>
 		<div id="loading"><span>Loading...</span></div>
+		<div id="debug"></div>
 		<div id="controls">
 			<p>
 				Forward vector: (x,y,z)<br/>

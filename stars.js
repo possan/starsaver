@@ -114,48 +114,57 @@
 
 		var f1 = document.getElementById('forwardvectorfield');
 		f1.value = self.buildString(self.settings.forwardX, self.settings.forwardY, self.settings.forwardZ);
-		f1.addEventListener('change', function() {
+		var save_f1 = function() {
 			// save field value
 			var a = self.parseArray(f1.value, 3);
 			self.settings.forwardX = a[0];
 			self.settings.forwardY = a[1];
 			self.settings.forwardZ = a[2];
 			self.saveConfig();
-		});
+		}
+		f1.addEventListener('change', save_f1);
+		f1.addEventListener('keyup', save_f1);
 
 		var f2 = document.getElementById('upvectorfield');
 		f2.value = self.buildString(self.settings.upX, self.settings.upY, self.settings.upZ);
-		f2.addEventListener('change', function() {
+		var save_f2 = function() {
 			// save field value
 			var a = self.parseArray(f2.value, 3);
 			self.settings.upX = a[0];
 			self.settings.upY = a[1];
 			self.settings.upZ = a[2];
 			self.saveConfig();
-		});
+		}
+		f2.addEventListener('change', save_f2);
+		f2.addEventListener('keyup', save_f2);
 
 		var f3 = document.getElementById('viewoffsetfield');
 		f3.value = self.buildString(self.settings.viewX, self.settings.viewY, self.settings.viewZ);
-		f3.addEventListener('change', function() {
+		var save_f3 = function() {
 			// save field value
 			var a = self.parseArray(f3.value, 3);
 			self.settings.viewX = a[0];
 			self.settings.viewY = a[1];
 			self.settings.viewZ = a[2];
 			self.saveConfig();
-		});
+		}
+		f3.addEventListener('change', save_f3);
+		f3.addEventListener('keyup', save_f3);
 
 		var f4 = document.getElementById('closecontrols');
 		f4.addEventListener('click', function() {
 			document.getElementById('controls').style.display = 'none';
 		});
 
-
 		document.body.addEventListener('keydown', function(e) {
 			console.log(e);
 			if (e.keyCode == 67) {
 				// "C"
 				document.getElementById('controls').style.display = 'block';
+			}
+			if (e.keyCode == 68) {
+				// "D"
+				document.getElementById('debug').style.display = 'block';
 			}
 		});
 	}
@@ -280,30 +289,55 @@
         var tmpmatrix2 = mat4.create();
         var tmpmatrix3 = mat4.create();
         var tmpmatrix4 = mat4.create();
+        var tmpmatrix5 = mat4.create();
 
+        var startTime = ((new Date()).getTime() / 1000.0);
         var globalTimeOffset = ((new Date()).getTime() / 1000.0) % 100000.0;
         console.log('global time offset', globalTimeOffset);
 
+        var self = this;
+
 	    function renderFrame() {
-	        gl.uniform1f(globalTimeLocation, time + globalTimeOffset);
+
+	        time = ((new Date()).getTime() / 1000.0) - startTime;
+
+	    	var gtime = time + globalTimeOffset;
+	        gl.uniform1f(globalTimeLocation, gtime);
 	        gl.uniform1f(localTimeLocation, time);
+
+			document.getElementById('debug').innerText = Math.round(gtime) + ' s.';
+
+	        var u = [self.settings.upX, self.settings.upY, self.settings.upZ];
+	        vec3.normalize(u, u);
+	        var f = [self.settings.forwardX, self.settings.forwardY, self.settings.forwardZ];
+	        vec3.normalize(f, f);
 
 	        mat4.identity(worldmatrix);
 	        mat4.identity(tmpmatrix);
 	        mat4.identity(tmpmatrix2);
 	        mat4.identity(tmpmatrix3);
 	        mat4.identity(tmpmatrix4);
-	        mat4.rotate(tmpmatrix2, tmpmatrix, time / 3.4, [1, 0, 0]);
-	        mat4.rotate(tmpmatrix3, tmpmatrix, time / 4.7, [0, 1, 0]);
-        	mat4.rotate(tmpmatrix4, tmpmatrix, time / 3.4, [0, 0, 1]);
+	        mat4.identity(tmpmatrix5);
+	        mat4.rotate(tmpmatrix2, tmpmatrix, gtime / 12.4, [1, 0, 0]);
+	        mat4.rotate(tmpmatrix3, tmpmatrix, gtime / 9.7, [0, 1, 0]);
+        	mat4.rotate(tmpmatrix4, tmpmatrix, gtime / 8.0, [0, 0, 1]);
+	        mat4.lookAt(tmpmatrix5, [0,0,0], f, u);
         	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix2);
         	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix3);
         	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix4);
+        	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix5);
+
+	    //  mat4.identity(tmpmatrix);
+		//	mat4.translate(tmpmatrix2, tmpmatrix, [self.settings.viewX, self.settings.viewY, self.settings.viewZ])
+      	//	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix2);
 
 	        mat4.identity(projmatrix);
-			mat4.perspective(tmpmatrix, 150, window.innerWidth/window.innerHeight, 3, 5000);
-			mat4.translate(projmatrix, tmpmatrix, [0, 0, 0])
-			// console.log(projmatrix);
+	        mat4.identity(tmpmatrix);
+	        mat4.identity(tmpmatrix2);
+			mat4.translate(tmpmatrix2, tmpmatrix, [-self.settings.viewX, -self.settings.viewY, self.settings.viewZ])
+			mat4.perspective(tmpmatrix3, 70, window.innerWidth/window.innerHeight, 1, 1000);
+        	mat4.multiply(projmatrix, projmatrix, tmpmatrix2);
+        	mat4.multiply(projmatrix, projmatrix, tmpmatrix3);
 
 	        gl.uniformMatrix4fv(worldmatrixLocation, false, worldmatrix);
 	        gl.uniformMatrix4fv(projectionmatrixLocation, false, projmatrix);
@@ -313,7 +347,7 @@
 			gl.enable(gl.BLEND);
 			gl.blendFunc(gl.ONE, gl.ONE);
 	        gl.drawArrays(gl.TRIANGLES, 0, numstars * 6);
-	        time += 1.0 / 60.0;
+	       // time += 1.0 / 60.0;
 	        requestAnimFrame(renderFrame);
 	    }
 
@@ -335,8 +369,23 @@
 		}
 	}
 
-	var g_stars = new Stars();
-	g_stars.init();
-	g_stars.start();
+	window.starfield = new Stars();
+
+	window.starfield.init();
+
+	window.starfield.start();
+
+	console.log('location', location);
+	if (location.hash && location.hash != '') {
+		window.starfield.appOverride(JSON.parse(location.hash.substring(1)));
+	}
+
+	/*
+	window.starfield.appOverride({
+		viewoffset: '0,1,2',
+		upvector: '0,1,0',
+		forwardvector: '0,0,1'
+	});
+	*/
 
 })();
