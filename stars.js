@@ -188,43 +188,65 @@
 
 		var numstars = 7000;
 
-		var t = [];
-		var t2 = [];
+		var t1 = new Array(numstars * 4 * 6);
+		var t2 = new Array(numstars * 2 * 6);
+
+		var t1o = 0;
+		var t2o = 0;
+
 		for(var i=0; i<numstars; i++) {
 			var bx = -100.0 + (Math.random() * 200.0);
 			var by = -100.0 + (Math.random() * 200.0);
 			var bz = -100.0 + (Math.random() * 200.0);
 
-			// bx = 100 * Math.sin(i / 350.0);
-			// by = 100 * Math.cos(i / 140.0);
-			// bz = 200 * (i / numstars) - 100;
+			var r = 0.0;
 
-			var r = 0.0;//1 + Math.random() * 0.02;
+			t1[t1o ++] = bx - r;
+			t1[t1o ++] = by - r;
+			t1[t1o ++] = bz + 0.0;
+			t1[t1o ++] = 0.0;
+			t2[t2o ++] = 0;
+			t2[t2o ++] = 0;
 
-			t = t.concat([
-				bx - r,  by - r,  bz + 0.0, 0.0,
-				bx + r,  by - r,  bz + 0.0, 0.0,
-				bx - r,  by + r,  bz + 0.0, 0.0,
-				bx - r,  by + r,  bz + 0.0, 0.0,
-				bx + r,  by - r,  bz + 0.0, 0.0,
-				bx + r,  by + r,  bz + 0.0, 0.0
-			]);
+			t1[t1o ++] = bx + r;
+			t1[t1o ++] = by - r;
+			t1[t1o ++] = bz + 0.0;
+			t1[t1o ++] = 0.0;
+			t2[t2o ++] = 1;
+			t2[t2o ++] = 0;
 
-			t2 = t2.concat([
-				0, 0,
-				1, 0,
-				0, 1,
-				0, 1,
-				1, 0,
-				1, 1
-			])
+			t1[t1o ++] = bx - r;
+			t1[t1o ++] = by + r;
+			t1[t1o ++] = bz + 0.0;
+			t1[t1o ++] = 0.0;
+			t2[t2o ++] = 0;
+			t2[t2o ++] = 1;
+
+			t1[t1o ++] = bx - r;
+			t1[t1o ++] = by + r;
+			t1[t1o ++] = bz + 0.0;
+			t1[t1o ++] = 0.0;
+			t2[t2o ++] = 0;
+			t2[t2o ++] = 1;
+
+			t1[t1o ++] = bx + r;
+			t1[t1o ++] = by - r;
+			t1[t1o ++] = bz + 0.0;
+			t1[t1o ++] = 0.0;
+			t2[t2o ++] = 1;
+			t2[t2o ++] = 0;
+
+			t1[t1o ++] = bx + r;
+			t1[t1o ++] = by + r;
+			t1[t1o ++] = bz + 0.0;
+			t1[t1o ++] = 0.0
+			t2[t2o ++] = 1;
+			t2[t2o ++] = 1
 		}
 
-		// Create a buffer and put a single clipspace rectangle in
-		// it (2 triangles)
-		var buffer = gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(t), gl.STATIC_DRAW);
+		var buffer1 = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer1);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(t1), gl.STATIC_DRAW);
 		gl.enableVertexAttribArray(positionLocation);
 		gl.vertexAttribPointer(positionLocation, 4, gl.FLOAT, false, 0, 0);
 
@@ -286,13 +308,8 @@
 	        gl.uniformMatrix4fv(worldmatrixLocation, false, worldmatrix);
 	        gl.uniformMatrix4fv(projectionmatrixLocation, false, projmatrix);
 
-		    // gl.activeTexture(gl.TEXTURE0);
-			// gl.bindTexture(gl.TEXTURE_2D, dataTexture);
-			// gl.uniform1i(gl.getUniformLocation(program, "specSampler"), 0);
-
 			gl.depthMask(false);
 			gl.disable(gl.DEPTH_TEST);
-			gl.disable(gl.ALPHA_TEST);
 			gl.enable(gl.BLEND);
 			gl.blendFunc(gl.ONE, gl.ONE);
 	        gl.drawArrays(gl.TRIANGLES, 0, numstars * 6);
