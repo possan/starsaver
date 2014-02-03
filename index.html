@@ -74,6 +74,7 @@
 			attribute vec4 position;
 			attribute vec2 uv;
 			uniform mat4 worldmatrix;
+			uniform mat4 viewmatrix;
 			uniform mat4 projmatrix;
 			uniform float localTime;
 			uniform float globalTime;
@@ -81,15 +82,13 @@
 			varying vec3 texcoord;
 
 			void main() {
-				vec3 tmp3 = vec3(
+				vec4 tmp = vec4(
 					position.x,
 					position.y,
-					mod(position.z + (globalTime * 30.0) + 200.0, 200.0) - 100.0
+					mod(position.z + (globalTime * 20.0) + 200.0, 200.0) - 100.0,
+					1.0
 				);
-				tmp3 *= mat3(worldmatrix);
-				vec4 tmp = vec4(tmp3, 0);
-				//	tmp.z -= 50.0;
-				tmp *= projmatrix;
+				tmp = projmatrix * viewmatrix * worldmatrix * tmp;
 				float radius = 1.0;
 				tmp.x += (2.0 * (uv.x - 0.5)) * radius;
 				tmp.y += (2.0 * (uv.y - 0.5)) * radius * resolution.x / resolution.y;
@@ -118,7 +117,7 @@
 				float b = 1.0 / (d * 10.0);
 				b -= 0.2;
 				b = max(0.0, b);
-				float mult = max(0.0, 1.0 - (texcoord.z / 60.0));
+				float mult = max(0.0, 1.0 - (texcoord.z / 100.0));
 				b *= mult;
 				b = max(0.0, b) * brightness;
 				gl_FragColor = vec4(

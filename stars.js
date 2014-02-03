@@ -97,16 +97,8 @@
 	}
 
 	Stars.prototype.init = function() {
-		console.log('init');
-
-		// defaults are initialized, load settings
 		this.loadConfig();
-
 		this.initConfigForm();
-
-		// load websaver overrides
-		if (window.saver) {
-		}
 	}
 
 	Stars.prototype.initConfigForm = function() {
@@ -191,6 +183,7 @@
 		var globalTimeLocation = gl.getUniformLocation(program, "globalTime");
 
 		var worldmatrixLocation = gl.getUniformLocation(program, "worldmatrix");
+		var viewmatrixLocation = gl.getUniformLocation(program, "viewmatrix");
 		var projectionmatrixLocation = gl.getUniformLocation(program, "projmatrix");
 
 		dataTexture = gl.createTexture();
@@ -209,6 +202,10 @@
 			var bx = -100.0 + (Math.random() * 200.0);
 			var by = -100.0 + (Math.random() * 200.0);
 			var bz = -100.0 + (Math.random() * 200.0);
+
+		//	by = 10 * Math.sin((0.0+i) / 105.0);
+		// 	bx = 10 * Math.cos((0.0+i) / 938.0);
+			bz = (i / numstars) * 200 - 100;
 
 			var r = 0.0;
 
@@ -267,16 +264,16 @@
 		gl.enableVertexAttribArray(uvLocation);
 		gl.vertexAttribPointer(uvLocation, 2, gl.FLOAT, false, 0, 0);
 
-	    var time = 0.0;
+		var time = 0.0;
 
 		function resize() {
-	    	var w = window.innerWidth;
-	    	var h = window.innerHeight;
-	    	console.log('resize', w, h);
-	    	canvas.width = w;
-	    	canvas.height = h;
-	    	gl.uniform2f(resolutionLocation, w, h);
-	    	gl.viewport(0, 0, w, h);
+			var w = window.innerWidth;
+			var h = window.innerHeight;
+			console.log('resize', w, h);
+			canvas.width = w;
+			canvas.height = h;
+			gl.uniform2f(resolutionLocation, w, h);
+			gl.viewport(0, 0, w, h);
 		}
 
 		function mousemove(e) {
@@ -285,76 +282,96 @@
 			gl.uniform2f(mouseLocation, e.offsetX / w, e.offsetY / h);
 		}
 
-        var worldmatrix = mat4.create();
-        var projmatrix = mat4.create();
-        var tmpmatrix = mat4.create();
-        var tmpmatrix2 = mat4.create();
-        var tmpmatrix3 = mat4.create();
-        var tmpmatrix4 = mat4.create();
-        var tmpmatrix5 = mat4.create();
+		var worldmatrix = mat4.create();
+		var viewmatrix = mat4.create();
+		var projmatrix = mat4.create();
+		var tmpmatrix = mat4.create();
+		var tmpmatrix2 = mat4.create();
+		var tmpmatrix3 = mat4.create();
+		var tmpmatrix4 = mat4.create();
+		var tmpmatrix5 = mat4.create();
+		var tmpmatrix6 = mat4.create();
 
-        var startTime = ((new Date()).getTime() / 1000.0);
-        var globalTimeOffset = ((new Date()).getTime() / 1000.0) % 100000.0;
-        console.log('global time offset', globalTimeOffset);
+		var startTime = ((new Date()).getTime() / 1000.0);
+		var globalTimeOffset = ((new Date()).getTime() / 1000.0) % 100000.0;
+		console.log('global time offset', globalTimeOffset);
 
-        var self = this;
+		var self = this;
 
-	    function renderFrame() {
+		function renderFrame() {
 
-	        time = ((new Date()).getTime() / 1000.0) - startTime;
+			time = ((new Date()).getTime() / 1000.0) - startTime;
 
-	    	var gtime = time + globalTimeOffset;
-	        gl.uniform1f(globalTimeLocation, gtime);
-	        gl.uniform1f(localTimeLocation, time);
+			var gtime = time + globalTimeOffset;
+			gl.uniform1f(globalTimeLocation, gtime);
+			gl.uniform1f(localTimeLocation, time);
 
 			document.getElementById('debug').innerText = Math.round(gtime) + ' s.';
 
-	        var u = [self.settings.upX, self.settings.upY, self.settings.upZ];
-	        vec3.normalize(u, u);
-	        var f = [self.settings.forwardX, self.settings.forwardY, self.settings.forwardZ];
-	        vec3.normalize(f, f);
+			var u = [self.settings.upX, self.settings.upY, self.settings.upZ];
+			vec3.normalize(u, u);
 
-	        mat4.identity(worldmatrix);
-	        mat4.identity(tmpmatrix);
-	        mat4.identity(tmpmatrix2);
-	        mat4.identity(tmpmatrix3);
-	        mat4.identity(tmpmatrix4);
-	        mat4.identity(tmpmatrix5);
-	        mat4.rotate(tmpmatrix2, tmpmatrix, gtime / 12.4, [1, 0, 0]);
-	        mat4.rotate(tmpmatrix3, tmpmatrix, gtime / 9.7, [0, 1, 0]);
-        	mat4.rotate(tmpmatrix4, tmpmatrix, gtime / 8.0, [0, 0, 1]);
-	        mat4.lookAt(tmpmatrix5, [0,0,0], f, u);
-        	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix2);
-        	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix3);
-        	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix4);
-        	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix5);
+			var f = [self.settings.forwardX, self.settings.forwardY, self.settings.forwardZ];
+			vec3.normalize(f, f);
 
-	    //  mat4.identity(tmpmatrix);
-		//	mat4.translate(tmpmatrix2, tmpmatrix, [self.settings.viewX, self.settings.viewY, self.settings.viewZ])
-      	//	mat4.multiply(worldmatrix, worldmatrix, tmpmatrix2);
+			mat4.identity(worldmatrix);
+			mat4.identity(viewmatrix);
+			mat4.identity(tmpmatrix);
+			mat4.identity(tmpmatrix2);
+			mat4.identity(tmpmatrix3);
+			mat4.identity(tmpmatrix4);
+			mat4.identity(tmpmatrix5);
+			mat4.identity(tmpmatrix6);
 
-	        mat4.identity(projmatrix);
-	        mat4.identity(tmpmatrix);
-	        mat4.identity(tmpmatrix2);
-			mat4.translate(tmpmatrix2, tmpmatrix, [self.settings.viewX/2.0, self.settings.viewY/2.0, self.settings.viewZ/2.0])
-			mat4.perspective(tmpmatrix3, 70, window.innerWidth/window.innerHeight, 1, 1000);
-        	mat4.multiply(projmatrix, projmatrix, tmpmatrix2);
-        	mat4.multiply(projmatrix, projmatrix, tmpmatrix3);
+			mat4.rotate(tmpmatrix2, tmpmatrix, gtime / 12.4, [1, 0, 0]);
+			mat4.rotate(tmpmatrix3, tmpmatrix, gtime / 9.7, [0, 1, 0]);
+			mat4.rotate(tmpmatrix4, tmpmatrix, gtime / 8.0, [0, 0, 1]);
 
-	        gl.uniformMatrix4fv(worldmatrixLocation, false, worldmatrix);
-	        gl.uniformMatrix4fv(projectionmatrixLocation, false, projmatrix);
+			var sc = -30.0, sc2 = 5.0;
+			mat4.lookAt(viewmatrix,
+				[
+					self.settings.viewX * sc - f[0] * sc2,
+					self.settings.viewY * sc - f[1] * sc2,
+					self.settings.viewZ * sc - f[2] * sc2
+				],
+				[
+					self.settings.viewX * sc,
+					self.settings.viewY * sc,
+					self.settings.viewZ * sc
+				],
+				[
+					u[0] * sc2,
+					u[1] * sc2,
+					u[2] * sc2
+				]
+			);
+
+			mat4.multiply(worldmatrix, worldmatrix, tmpmatrix2);
+			mat4.multiply(worldmatrix, worldmatrix, tmpmatrix3);
+			mat4.multiply(worldmatrix, worldmatrix, tmpmatrix4);
+
+			mat4.identity(projmatrix);
+			mat4.identity(tmpmatrix3);
+			mat4.perspective(tmpmatrix3, 45, window.innerWidth/window.innerHeight, 1, 1000);
+			mat4.multiply(projmatrix, projmatrix, tmpmatrix3);
+
+			// console.log(worldmatrix);
+
+			gl.uniformMatrix4fv(worldmatrixLocation, false, worldmatrix);
+			gl.uniformMatrix4fv(viewmatrixLocation, false, viewmatrix);
+			gl.uniformMatrix4fv(projectionmatrixLocation, false, projmatrix);
 
 			gl.depthMask(false);
 			gl.disable(gl.DEPTH_TEST);
 			gl.enable(gl.BLEND);
 			gl.blendFunc(gl.ONE, gl.ONE);
-	        gl.drawArrays(gl.TRIANGLES, 0, numstars * 6);
-	       // time += 1.0 / 60.0;
-	        requestAnimFrame(renderFrame);
-	    }
+			gl.drawArrays(gl.TRIANGLES, 0, numstars * 6);
+		   // time += 1.0 / 60.0;
+			requestAnimFrame(renderFrame);
+		}
 
-	    resize();
-	    requestAnimFrame(renderFrame);
+		resize();
+		requestAnimFrame(renderFrame);
 
 		return true;
 	}
