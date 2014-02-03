@@ -89,7 +89,7 @@
 					1.0
 				);
 				tmp = projmatrix * viewmatrix * worldmatrix * tmp;
-				float radius = 1.0;
+				float radius = 0.33;
 				tmp.x += (2.0 * (uv.x - 0.5)) * radius;
 				tmp.y += (2.0 * (uv.y - 0.5)) * radius * resolution.x / resolution.y;
 				gl_Position = tmp;
@@ -114,8 +114,8 @@
 				float d = sqrt( nx * nx + ny * ny );
 				d = max(0.0, d);
 				float brightness = min(1.0, localTime / 2.0);
-				float b = 1.0 / (d * 10.0);
-				b -= 0.2;
+				float b = 1.0 / (d * 4.0);
+				b -= 0.3;
 				b = max(0.0, b);
 				float mult = max(0.0, 1.0 - (texcoord.z / 100.0));
 				b *= mult;
